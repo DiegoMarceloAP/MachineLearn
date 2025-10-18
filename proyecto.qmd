@@ -346,7 +346,7 @@ ax.set_title("Matriz de Confusión (Clasificación)")
 plt.show()
 ```
 ### Conclusiones del modelo de clasificación.
-- El modelo de Regresión Logística (con class_weight='balanced' para manejar el desbalance) obtuvo un Accuracy general de 0.70, esto puede ser engañoso considerando ques se tiene un fuerte desbalanceo de las clases como se puede observar en el grafico de distribución de la Toxicidad.
+- El modelo de Regresión Logística (con class_weight='balanced' para manejar el desbalance) obtuvo un Accuracy general de 0.70, esto puede ser engañoso considerando que se tiene un fuerte desbalanceo de las clases como se puede observar en el grafico de distribución de la Toxicidad.
 - Considerando que el dataset es una de muestra, modelo puede mejorar con más datos de entrenamiento y de predicción.
 
 # 4. Regresión:
@@ -452,14 +452,14 @@ print("\nDistribución de niveles de toxicidad por cluster (normalizado por fila
 print(pd.crosstab(df['cluster'], df['toxicity_level'], normalize='index'))
 ```
 ### Conclusiones del Modelo de Clustering (K-Means) 
-- De observado en la grafica el metodo del codo no da un valor que nos pueda dar un indicio de un valor optimo 
+- De observado en la gráfica el método del codo no da un valor que nos pueda dar un indicio de un valor optimo 
 - El algoritmo (K-Means) no agrupó los tweets por su nivel de toxicidad. En lugar de eso, casi con seguridad los agrupó por TEMA, y lo que estás viendo es qué temas tienden a ser más tóxicos que otros.
 
 # Conclusiones del Proyecto 
 - Como se ha estudio a lo largo del curso hay varios factores claves para obtener un resultado satisfactorio:
-- Conocer o estudiar la data que vamos a manejar .
+- Conocer o estudiar la data que vamos a manejar.
 - Obtener una data saludable.
-- No hay una formula (receta) que se pueda seguir todo dataset tienen sus complejidades y su objetivo especifico.
+- No hay una formula (receta) que se pueda seguir, todo dataset tienen sus complejidades y su objetivo específico.
 
 - Para un resultado optimo se debe realizar pruebas con diferentes algoritmos. 
 "En este proyecto, se aplicó un flujo completo de Machine Learning. El preprocesamiento fue clave, combinando metadatos y texto usando ColumnTransformer."

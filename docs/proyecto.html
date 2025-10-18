@@ -1016,23 +1016,23 @@ memory usage: 285.8+ KB</code></pre>
 <div id="distribucion_toxicity" class="cell-output cell-output-display" data-execution_count="5">
 
 <style>
-  #altair-viz-7f235c4a9e134a49a48dabec0dc599eb.vega-embed {
+  #altair-viz-6737cdf7864440ecb4bd41bf3a8d036d.vega-embed {
     width: 100%;
     display: flex;
   }
 
-  #altair-viz-7f235c4a9e134a49a48dabec0dc599eb.vega-embed details,
-  #altair-viz-7f235c4a9e134a49a48dabec0dc599eb.vega-embed details summary {
+  #altair-viz-6737cdf7864440ecb4bd41bf3a8d036d.vega-embed details,
+  #altair-viz-6737cdf7864440ecb4bd41bf3a8d036d.vega-embed details summary {
     position: relative;
   }
 </style>
-<div id="altair-viz-7f235c4a9e134a49a48dabec0dc599eb"></div>
+<div id="altair-viz-6737cdf7864440ecb4bd41bf3a8d036d"></div>
 <script type="text/javascript">
   var VEGA_DEBUG = (typeof VEGA_DEBUG == "undefined") ? {} : VEGA_DEBUG;
   (function(spec, embedOpt){
     let outputDiv = document.currentScript.previousElementSibling;
-    if (outputDiv.id !== "altair-viz-7f235c4a9e134a49a48dabec0dc599eb") {
-      outputDiv = document.getElementById("altair-viz-7f235c4a9e134a49a48dabec0dc599eb");
+    if (outputDiv.id !== "altair-viz-6737cdf7864440ecb4bd41bf3a8d036d") {
+      outputDiv = document.getElementById("altair-viz-6737cdf7864440ecb4bd41bf3a8d036d");
     }
 
     const paths = {
@@ -1250,7 +1250,7 @@ dtype: int64</code></pre>
 <span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a>df[<span class="st">'content'</span>] <span class="op">=</span> df[<span class="st">'content'</span>].<span class="bu">apply</span>(clean_text)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>C:\Users\daltamirano\AppData\Local\Temp\ipykernel_18324\4034373993.py:40: SettingWithCopyWarning: 
+<pre><code>C:\Users\daltamirano\AppData\Local\Temp\ipykernel_14760\4034373993.py:40: SettingWithCopyWarning: 
 A value is trying to be set on a copy of a slice from a DataFrame.
 Try using .loc[row_indexer,col_indexer] = value instead
 
@@ -1350,7 +1350,7 @@ Name: content, dtype: object</code></pre>
 <span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>y_clf <span class="op">=</span> df[<span class="st">'toxicity_level'</span>]</span>
 <span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>y_reg <span class="op">=</span> df[<span class="st">'toxicity_score'</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>C:\Users\daltamirano\AppData\Local\Temp\ipykernel_18324\1159134381.py:5: SettingWithCopyWarning: 
+<pre><code>C:\Users\daltamirano\AppData\Local\Temp\ipykernel_14760\1159134381.py:5: SettingWithCopyWarning: 
 A value is trying to be set on a copy of a slice from a DataFrame.
 Try using .loc[row_indexer,col_indexer] = value instead
 
@@ -1494,7 +1494,7 @@ ROC-AUC Score (Weighted): 0.8027</code></pre>
 <section id="conclusiones-del-modelo-de-clasificación." class="level3">
 <h3 class="anchored" data-anchor-id="conclusiones-del-modelo-de-clasificación.">Conclusiones del modelo de clasificación.</h3>
 <ul>
-<li>El modelo de Regresión Logística (con class_weight=‘balanced’ para manejar el desbalance) obtuvo un Accuracy general de 0.70, esto puede ser engañoso considerando ques se tiene un fuerte desbalanceo de las clases como se puede observar en el grafico de distribución de la Toxicidad.</li>
+<li>El modelo de Regresión Logística (con class_weight=‘balanced’ para manejar el desbalance) obtuvo un Accuracy general de 0.70, esto puede ser engañoso considerando que se tiene un fuerte desbalanceo de las clases como se puede observar en el grafico de distribución de la Toxicidad.</li>
 <li>Considerando que el dataset es una de muestra, modelo puede mejorar con más datos de entrenamiento y de predicción.</li>
 </ul>
 </section>
@@ -1652,7 +1652,7 @@ cluster
 4               0.010870  0.836957  0.152174</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>C:\Users\daltamirano\AppData\Local\Temp\ipykernel_18324\3072938535.py:4: SettingWithCopyWarning: 
+<pre><code>C:\Users\daltamirano\AppData\Local\Temp\ipykernel_14760\3072938535.py:4: SettingWithCopyWarning: 
 A value is trying to be set on a copy of a slice from a DataFrame.
 Try using .loc[row_indexer,col_indexer] = value instead
 
@@ -1664,7 +1664,7 @@ See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stab
 <section id="conclusiones-del-modelo-de-clustering-k-means" class="level3">
 <h3 class="anchored" data-anchor-id="conclusiones-del-modelo-de-clustering-k-means">Conclusiones del Modelo de Clustering (K-Means)</h3>
 <ul>
-<li>De observado en la grafica el metodo del codo no da un valor que nos pueda dar un indicio de un valor optimo</li>
+<li>De observado en la gráfica el método del codo no da un valor que nos pueda dar un indicio de un valor optimo</li>
 <li>El algoritmo (K-Means) no agrupó los tweets por su nivel de toxicidad. En lugar de eso, casi con seguridad los agrupó por TEMA, y lo que estás viendo es qué temas tienden a ser más tóxicos que otros.</li>
 </ul>
 </section>
@@ -1674,9 +1674,9 @@ See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stab
 <h1>Conclusiones del Proyecto</h1>
 <ul>
 <li><p>Como se ha estudio a lo largo del curso hay varios factores claves para obtener un resultado satisfactorio:</p></li>
-<li><p>Conocer o estudiar la data que vamos a manejar .</p></li>
+<li><p>Conocer o estudiar la data que vamos a manejar.</p></li>
 <li><p>Obtener una data saludable.</p></li>
-<li><p>No hay una formula (receta) que se pueda seguir todo dataset tienen sus complejidades y su objetivo especifico.</p></li>
+<li><p>No hay una formula (receta) que se pueda seguir, todo dataset tienen sus complejidades y su objetivo específico.</p></li>
 <li><p>Para un resultado optimo se debe realizar pruebas con diferentes algoritmos. “En este proyecto, se aplicó un flujo completo de Machine Learning. El preprocesamiento fue clave, combinando metadatos y texto usando ColumnTransformer.”</p></li>
 <li><p>Rendimiento de Modelos: El modelo de Regresión parece ser más informativo que el de Clasificación, ya que predecir el grado de toxicidad es más útil que una categoría, especialmente dado el severo desbalance de las clases ‘Media’ y ‘Alta’ que dificulta la clasificación.”</p></li>
 <li><p>Patrones Encontrados: “El clustering confirmó que la toxicidad no es un grupo aislado, sino una propiedad que aparece con más frecuencia en ciertos grupos temáticos.”</p></li>
