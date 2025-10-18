@@ -4,25 +4,8 @@ author: "Diego Altamirano"
 code-fold: false
 ---
 - Objetivo: Aplicar técnicas de análisis de datos, preprocesamiento, clasificación, regresión y clustering en un conjunto de datos real para extraer información valiosa y construir modelos predictivos efectivos.
-1. Análisis Exploratorio de Datos (EDA):
 
-	•	Analizar el dataset entregado con foco en:
-
-		
-		
-		
-	
-
-		•	
-
-		•	Gráficos de barras o conteo para variables categóricas.
-
-		•	Nubes de palabras o frecuencias para texto.
-
-		•	Gráficos de dispersión si aplica.
-
-	•	Explicar de forma clara al menos 3 hallazgos clave del análisis.
-
+# 1. Análisis Exploratorio de Datos (EDA):
 ## Cargar librerías
 ```{python}
 #| label: cargar librerías
@@ -53,11 +36,24 @@ from sklearn.metrics import ConfusionMatrixDisplay
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import normalize
+from collections import Counter
+from wordcloud import WordCloud
 
 nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet') # necessary for lemmatization
 spanish_stopwords = stopwords.words('spanish')
+
+# Intentar cargar spaCy (mejor lematización para español). Si no está disponible,
+# caemos a un método ligero con SnowballStemmer para no romper el flujo.
+try:
+    import spacy
+    nlp = spacy.load("es_core_news_sm")
+    spaCy_loaded = True
+except Exception:
+    from nltk.stem import SnowballStemmer
+    stemmer = SnowballStemmer("spanish")
+    spaCy_loaded = False
 
 ```
 ## Cargar dataset
@@ -73,19 +69,19 @@ except Exception as e:
     exit()
 df
 ```
-###  Tipo y cantidad de variables (numéricas, categóricas, texto).
+##  Tipo y cantidad de variables (numéricas, categóricas, texto).
 
 ```{python}
 #| label: tipo_y_cantidad_de_variables
 df.info()
 ```
-### Estadísticas descriptivas (mínimos, máximos, media, mediana, distribución).
+## Estadísticas descriptivas (mínimos, máximos, media, mediana, distribución).
 
 ```{python}
 #| label: estadisticas_descriptivas
 df.describe()
 ```
-### Distribución de la variable TOXICITY.
+## Distribución de la variable TOXICITY.
 
 ```{python}
 #| label: distribucion_toxicity
@@ -134,9 +130,11 @@ df.isnull().sum()
 ```
 
 
-# 2. Preprocesamiento y codificación:
+
+
 
 ## Limpieza del texto y metadatos.
+### crear función para limpiar el texto y lematizar
 ```{python}
 #| label: limpieza_texto
 def remove_accents(text):
@@ -154,10 +152,29 @@ def clean_text(text):
     text = re.sub(r'http\S+|www\S+|https\S+', '', text, flags=re.MULTILINE) # eliminar URLs
     text = re.sub(r'@\w+', '', text) # eliminar menciones
     text = re.sub(r'#\w+', '', text) # eliminar hashtags
-    text = re.sub(r'[^A-Za-z0-9\sáéíóúÁÉÍÓÚüÜñÑ]+', '', text) # eliminar caracteres especiales salvo letras con acento y ñ
+    #text = re.sub(r'[^A-Za-z0-9\sáéíóúÁÉÍÓÚüÜñÑ]+', '', text) 
+    text = unicodedata.normalize('NFD', text).encode('ascii', 'ignore').decode('utf-8')
+    # eliminar caracteres especiales salvo letras con acento y ñ
     text = text.lower() # convertir a minúsculas
     text = remove_accents(text)  # reemplazar vocales tildadas por sin tilde
+
+    # Si spaCy está disponible usamos su lematización; si no, usamos SnowballStemmer
+    if spaCy_loaded:
+        doc = nlp(text)
+        tokens = [token.lemma_.lower() for token in doc if token.is_alpha]
+        tokens = [t for t in tokens if t not in spanish_stopwords]
+        text = " ".join(tokens)
+    else:
+        # Tokenizar, eliminar stopwords y aplicar stemming como alternativa
+        tokens = word_tokenize(text)
+        tokens = [t.lower() for t in tokens if t.isalpha()]
+        tokens = [t for t in tokens if t not in spanish_stopwords]
+        # Aplicar stemmer definido en el fallback
+        text = " ".join([stemmer.stem(t) for t in tokens])
+
+    text = text.strip()
     return text
+
 
 df['content'] = df['content'].apply(clean_text)
 
@@ -167,19 +184,53 @@ df['content'] = df['content'].apply(clean_text)
 #| label: ver_resultados_limpieza
 df['content'].head(10)
 ```
-### clasificar la variable objetivo TOXICITY en categorías entre 0 y 1
-```{python}
-#| label: clasificar_toxicity
-def classify_toxicity(score):
-    if score < 0.3: return 'Bajo'
-    elif 0.3 <= score < 0.7: return 'Medio'
-    else: return 'Alto'
-df['toxicity_level'] = df['toxicity_score'].apply(classify_toxicity)
-```
-### Selección de features y target
+
+## crear nubes y frecuencias de palabras después de la limpieza
 
 ```{python}
-# Definir targets
+#| label: nubes_frecuencias_despues_limpieza
+all_text = ' '.join(df['content'].dropna())
+try:
+    # Intentar usar wordcloud si está instalado
+    
+    wordcloud = WordCloud(width=800, height=400, background_color='white').generate(all_text)
+    plt.figure(figsize=(10, 5))
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis('off')
+    plt.title('Nube de palabras después de la limpieza')
+    plt.show()
+except Exception as e:
+    print(f"WordCloud no disponible o falló: {e}\nUsando gráfico de barras como alternativa.")
+
+# Frecuencia de palabras (barra horizontal como fallback o complemento)
+
+word_counts = Counter(all_text.split())
+most_common_words = word_counts.most_common(20)
+if most_common_words:
+    words, counts = zip(*most_common_words)
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x=list(counts)[::-1], y=list(words)[::-1])
+    plt.title('20 palabras más comunes después de la limpieza')
+    plt.xlabel('Frecuencia')
+    plt.ylabel('Palabras')
+    plt.show()
+else:
+    print('No hay texto disponible para generar frecuencias.')
+```
+##  Explicar de forma clara al menos 3 hallazgos clave del análisis.
+- El grafico de distribución de la variable TOXICITY muestra que la mayoría de los tweets tienen puntuaciones media (neutro) indicando que la mayoría del contenido no es altamente tóxico.
+- Basados en mis histogramas de variables numéricas, la mayoría de los comentarios tóxicos provienen de usuarios con menos seguidores y menor antigüedad de cuenta.
+- Los comentarios con mayor toxicidad tienden a contener más menciones y hashtags.
+- La longitud del contenido y la polaridad del sentimiento son características importantes para predecir la toxicidad.
+
+
+# 2. Preprocesamiento y codificación:
+## clasificar la variable objetivo TOXICITY en categorías entre 0 y 1
+
+### Metodo de clasificación de la variable objetivo
+
+```{python}
+#| label: clasificar_variable_objetivo
 def classify_toxicity(score):
     if score < 0.3: return 'Bajo'
     elif 0.3 <= score < 0.7: return 'Medio'
@@ -187,7 +238,11 @@ def classify_toxicity(score):
 df['toxicity_level'] = df['toxicity_score'].apply(classify_toxicity)
 y_clf = df['toxicity_level']
 y_reg = df['toxicity_score']
+```
+### definir features (X)
 
+```{python}
+#| label: definir_features
 # Definir features (X)
 numeric_features = ['authorFollowers', 'account_age_days', 'mentions_count', 
                     'hashtags_count', 'content_length', 'sentiment_polarity']
@@ -195,9 +250,11 @@ categorical_features = ['isReply', 'authorVerified', 'has_profile_picture']
 text_feature = 'content'
 
 X = df[numeric_features + categorical_features + [text_feature]]
+```
+### Train-Test Split
 
-# --- 4. Train-Test Split ---
-
+```{python}
+#| label: train_test_split
 # Para Clasificación (con stratify)
 X_train_clf, X_test_clf, y_train_clf, y_test_clf = train_test_split(
     X, y_clf, test_size=0.2, random_state=42, stratify=y_clf
@@ -207,7 +264,11 @@ X_train_clf, X_test_clf, y_train_clf, y_test_clf = train_test_split(
 X_train_reg, X_test_reg, y_train_reg, y_test_reg = train_test_split(
     X, y_reg, test_size=0.2, random_state=42
 )
+```
+### Preprocesador Común (ColumnTransformer)
 
+```{python}
+#| label: preprocesador_comun
 # --- 5. Preprocesador Común (ColumnTransformer) ---
 
 numeric_transformer = Pipeline(steps=[
@@ -231,10 +292,21 @@ preprocessor = ColumnTransformer(
     ],
     remainder='drop'
 )
+```
+###  Conclusiones  Preprocesamiento y codificación:
+- Para hacernos entender debemos pasar de un lenguaje humano a un lenguaje de maquina es importante realizar las trasformaciones basados en nuestro analisis del EDA y ver el tipo de varibles que vamos a manejar 
+- Se realizó una limpieza de texto para eliminar ruido (URLs, menciones, hashtags) y normalizar (minúsculas, sin acentos).
+- Los datos se dividieron en conjuntos de entrenamiento (80%) y prueba (20%) antes de aplicar cualquier transformación, para prevenir la fuga de datos
 
-# --- 6. Modelo de Clasificación (Logistic Regression) ---
+# 3. Clasificación:
 
-print("\n--- INICIANDO CLASIFICACIÓN ---")
+## Modelo de Clasificación (Logistic Regression)
+
+```{python}
+#| label: modelo_clasificacion
+# Modelo de Clasificación (Logistic Regression) ---
+
+print("\n Modelo de Clasificación (Logistic Regression)")
 
 clf_pipeline = Pipeline(steps=[
     ('preprocessor', preprocessor),
@@ -261,16 +333,29 @@ try:
 except ValueError as e:
     print(f"No se pudo calcular ROC-AUC: {e}")
 
+
+```
+### Matriz de Confusión Modelo de clasificación
+```{python}
+#| label: matriz_confusion
 # Matriz de Confusión
 fig, ax = plt.subplots(figsize=(8, 6))
 ConfusionMatrixDisplay.from_predictions(y_test_clf, y_pred_clf, ax=ax, 
                                         normalize='true', cmap='Blues')
 ax.set_title("Matriz de Confusión (Clasificación)")
 plt.show()
+```
+### Conclusiones del modelo de clasificación.
+- El modelo de Regresión Logística (con class_weight='balanced' para manejar el desbalance) obtuvo un Accuracy general de 0.70, esto puede ser engañoso considerando ques se tiene un fuerte desbalanceo de las clases como se puede observar en el grafico de distribución de la Toxicidad.
+- Considerando que el dataset es una de muestra, modelo puede mejorar con más datos de entrenamiento y de predicción.
 
-# --- 7. Modelo de Regresión (Random Forest) ---
+# 4. Regresión:
+## Modelo de Regresión (Random Forest)
 
-print("\n--- INICIANDO REGRESIÓN ---")
+```{python}
+#| label: modelo_regresion
+
+print("\n Modelo de Regresión (Random Forest)")
 
 reg_pipeline = Pipeline(steps=[
     ('preprocessor', preprocessor), # Reutilizamos el preprocesador
@@ -292,7 +377,11 @@ r2 = r2_score(y_test_reg, y_pred_reg)
 print(f"Mean Absolute Error (MAE): {mae:.4f}")
 print(f"Root Mean Squared Error (RMSE): {rmse:.4f}")
 print(f"R-squared (R²): {r2:.4f}")
+```
+### Vizualización Regresión (Random Forest)
 
+```{python}
+#| label: visualizacion_regresion
 # Visualización
 plt.figure(figsize=(8, 6))
 sns.scatterplot(x=y_test_reg, y=y_pred_reg, alpha=0.6)
@@ -301,10 +390,18 @@ plt.title('Regresión: Valores Reales vs. Predichos')
 plt.xlabel('Toxicidad Real')
 plt.ylabel('Toxicidad Predicha')
 plt.show()
+```
+### Conclusiones del modelo Regresión (Random Forest) 
+- De los resultados obtenidos podemos concluir:
+- El modelo es decente para predecir la toxicidad de tweets "Medio" o Neutros si así lo queremos interpretar (probablemente los de toxicidad baja), pero falla estrepitosamente al predecir los casos extremos (los tweets muy tóxicos o atípicos), que son los que elevan el RMSE.
+- El gráfico de dispersión 'Reales vs. Predichos' muestra la relación entre los valores reales (eje X) y los predichos (eje Y). Los puntos se agrupan cerca de la línea diagonal (que representaría una predicción perfecta), pero se observa que el modelo tiende a subestimar los scores de toxicidad más altos (puntos por debajo de la línea en el extremo derecho)
 
-# --- 8. Modelo de Clustering (K-Means) ---
+# 5. Clustering:
+## Modelo de Clustering (K-Means)
 
-print("\n--- INICIANDO CLUSTERING ---")
+```{python}
+#| label: Modelo_KMeans
+print("\n Modelo de Clustering (K-Means)")
 
 # Pipeline solo para texto, con reducción de dimensionalidad
 text_cluster_pipeline = Pipeline(steps=[
@@ -319,7 +416,11 @@ X_clust = text_cluster_pipeline.fit_transform(X_text_only)
 X_clust = normalize(X_clust) # Normalizar post-SVD
 
 print(f"Datos transformados para clustering: {X_clust.shape}")
+```
+### Metodo del codo  y vizualización
 
+```{python}
+#| label: metodo_codo
 # Método del Codo
 sse = []
 K = range(2, 11)
@@ -334,7 +435,9 @@ plt.xlabel('Número de clusters (k)')
 plt.ylabel('Inercia (SSE)')
 plt.title('Método del Codo para K-Means')
 plt.show()
-
+```
+```{python}
+#| label: KMeans5
 # Aplicar K-Means (suponiendo k=5 basado en el codo)
 k_optimal = 5
 kmeans = KMeans(n_clusters=k_optimal, random_state=42, n_init=10)
@@ -348,3 +451,28 @@ print(df.groupby('cluster')['toxicity_score'].mean().sort_values(ascending=False
 print("\nDistribución de niveles de toxicidad por cluster (normalizado por fila):")
 print(pd.crosstab(df['cluster'], df['toxicity_level'], normalize='index'))
 ```
+### Conclusiones del Modelo de Clustering (K-Means) 
+- De observado en la grafica el metodo del codo no da un valor que nos pueda dar un indicio de un valor optimo 
+- El algoritmo (K-Means) no agrupó los tweets por su nivel de toxicidad. En lugar de eso, casi con seguridad los agrupó por TEMA, y lo que estás viendo es qué temas tienden a ser más tóxicos que otros.
+
+# Conclusiones del Proyecto 
+- Como se ha estudio a lo largo del curso hay varios factores claves para obtener un resultado satisfactorio:
+- Conocer o estudiar la data que vamos a manejar .
+- Obtener una data saludable.
+- No hay una formula (receta) que se pueda seguir todo dataset tienen sus complejidades y su objetivo especifico.
+
+- Para un resultado optimo se debe realizar pruebas con diferentes algoritmos. 
+"En este proyecto, se aplicó un flujo completo de Machine Learning. El preprocesamiento fue clave, combinando metadatos y texto usando ColumnTransformer."
+
+- Rendimiento de Modelos: El modelo de Regresión parece ser más informativo que el de Clasificación, ya que predecir el grado de toxicidad es más útil que una categoría, especialmente dado el severo desbalance de las clases 'Media' y 'Alta' que dificulta la clasificación."
+
+- Patrones Encontrados: "El clustering confirmó que la toxicidad no es un grupo aislado, sino una propiedad que aparece con más frecuencia en ciertos grupos temáticos."
+
+- Calidad de Datos: La etiqueta toxicity_score puede mejor nuestro proyecto si se cuenta con una mayor cantidad de registros.
+
+# Futuras mejoras
+- Clasificación: Aplicar técnicas de oversampling (como SMOTE) para balancear las clases 'Media' y 'Alta' y mejorar el recall del modelo.
+
+- Regresión/Clasificación: Reemplazar TF-IDF con embeddings de lenguaje más avanzados (como BETO, un BERT en español) para capturar mejor el contexto y el sarcasmo, lo que casi seguro mejoraría el R².
+
+- Clustering: Analizar las palabras más comunes en cada cluster para entender qué temas (ej. política, deportes, etc.) agrupó el modelo.
